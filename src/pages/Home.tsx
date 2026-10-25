@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, ArrowRight, Sparkles, CheckCircle2, MapPin, Phone, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, Sparkles, CheckCircle2, MapPin, Phone, MessageSquare, Play, Pause } from 'lucide-react';
 import { HERO_SLIDES, SERVICES, GALLERY_ITEMS, BUSINESS_INFO } from '../data/content';
 
 interface HomeProps {
@@ -18,9 +18,9 @@ export default function Home({ onNavigate, onOpenConsultation }: HomeProps) {
     if (isPaused) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 5500);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, [currentSlide, isPaused]);
 
   const handlePrevSlide = () => {
     setCurrentSlide((prev) => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1));
@@ -32,6 +32,7 @@ export default function Home({ onNavigate, onOpenConsultation }: HomeProps) {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -39,11 +40,13 @@ export default function Home({ onNavigate, onOpenConsultation }: HomeProps) {
   };
 
   const handleTouchEnd = () => {
-    if (touchStartX.current - touchEndX.current > 50) {
-      handleNextSlide();
-    }
-    if (touchEndX.current - touchStartX.current > 50) {
-      handlePrevSlide();
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        handleNextSlide();
+      } else {
+        handlePrevSlide();
+      }
     }
   };
 
@@ -52,8 +55,6 @@ export default function Home({ onNavigate, onOpenConsultation }: HomeProps) {
       {/* 1. THREE-SLIDE PREMIUM HERO */}
       <section
         className="relative h-[85vh] md:h-[92vh] w-full overflow-hidden bg-[#171817]"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -130,18 +131,44 @@ export default function Home({ onNavigate, onOpenConsultation }: HomeProps) {
           </button>
         </div>
 
-        {/* Slide Indicators */}
+        {/* Slide Indicators with Progress Bar */}
         <div className="absolute bottom-8 left-6 md:left-12 z-20 flex items-center space-x-3">
-          {HERO_SLIDES.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
-                index === currentSlide ? 'w-10 h-2 bg-[#B99A65]' : 'w-2 h-2 bg-white/40 hover:bg-white'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+          {HERO_SLIDES.map((slide, index) => {
+            const isActive = index === currentSlide;
+            return (
+              <button
+                key={slide.id}
+                onClick={() => setCurrentSlide(index)}
+                className="group p-1 flex items-center cursor-pointer focus:outline-none"
+                aria-label={`Go to slide ${index + 1}`}
+              >
+                <div
+                  className={`h-1.5 rounded-full overflow-hidden transition-all duration-300 relative ${
+                    isActive ? 'w-14 bg-white/30' : 'w-3 bg-white/40 hover:bg-white'
+                  }`}
+                >
+                  {isActive && !isPaused && (
+                    <div
+                      key={`progress-${currentSlide}`}
+                      className="absolute inset-0 bg-[#B99A65] rounded-full animate-hero-progress"
+                    />
+                  )}
+                  {isActive && isPaused && (
+                    <div className="absolute inset-0 bg-[#B99A65] rounded-full" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+          {/* Subtle Play / Pause toggle */}
+          <button
+            onClick={() => setIsPaused(!isPaused)}
+            className="w-6 h-6 rounded-full bg-black/40 border border-white/20 text-white/80 hover:text-white flex items-center justify-center transition-colors ml-2 cursor-pointer"
+            aria-label={isPaused ? 'Resume auto-scroll' : 'Pause auto-scroll'}
+            title={isPaused ? 'Resume auto-scroll' : 'Pause auto-scroll'}
+          >
+            {isPaused ? <Play className="w-2.5 h-2.5 ml-0.5" /> : <Pause className="w-2.5 h-2.5" />}
+          </button>
         </div>
       </section>
 
