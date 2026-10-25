@@ -1,0 +1,6 @@
+{
+  "name": "CCA Interior",
+  "description": "Interior Decoration, Curtains & Blinds in Jos, Plateau State, Nigeria",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
